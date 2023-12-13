@@ -3,9 +3,7 @@ from typing import Type, TypeVar, MutableMapping, Any, Iterable
 from datapipelines import DataSource, DataSink, PipelineContext, Query, NotFoundError, \
     validate_query
 
-from cassiopeia.data import Platform, Region
 from cassiopeia.dto.account import AccountDto
-from cassiopeia.datastores.uniquekeys import convert_to_continent
 from .common import SimpleKVDiskService
 
 T = TypeVar("T")
@@ -41,16 +39,12 @@ class AccountDiskService(SimpleKVDiskService):
         .as_(str)
         .and_("tagLine")
         .as_(str)
-        .also.has("region")
-        .as_(Region)
     )
 
     @get.register(AccountDto)
-    @validate_query(_validate_get_account_query, convert_to_continent)
+    @validate_query(_validate_get_account_query)
     def get_account(self, query: MutableMapping[str, Any],
                     context: PipelineContext = None) -> AccountDto:
-        continent_str = query["continent"].value
-
         # Need to hash the name and tag because they can have invalid characters.
         game_name = query.get("name", "").replace(" ", "").lower()
         game_name = str(game_name.encode("utf-8"))
@@ -60,7 +54,7 @@ class AccountDiskService(SimpleKVDiskService):
         for key in self._store:
             if key.startswith("AccountDto."):
                 _, continent, puuid, gameName, tagLine = key.split(".")
-                if continent == continent_str and any([
+                if any([
                     str(query.get("puuid", None)).startswith(puuid),
                     gameName == game_name,
                     tagLine == tag_line,
@@ -83,16 +77,13 @@ class AccountDiskService(SimpleKVDiskService):
 
     @put.register(AccountDto)
     def put_account(self, item: AccountDto, context: PipelineContext = None) -> None:
-        continent = Region(item["region"]).continent.value
-
         name = item["gameName"].replace(" ", "").lower()
         name = name.encode("utf-8")
         tag = item["tagLine"].replace(" ", "").lower()
         tag = tag.encode("utf-8")
 
-        key = "{clsname}.{continent}.{puuid}.{gameName}.{tagLine}".format(
+        key = "{clsname}.{puuid}.{gameName}.{tagLine}".format(
             clsname=AccountDto.__name__,
-            continent=continent,
             puuid=item["puuid"][:8],
             gameName=name,
             tagLine=tag
