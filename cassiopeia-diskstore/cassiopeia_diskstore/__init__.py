@@ -13,6 +13,7 @@ def _default_services(path: str = None, expirations: Mapping[type, float] = None
     from .staticdata import StaticDataDiskService
     from .champion import ChampionDiskService
     from .summoner import SummonerDiskService
+    from .account import AccountDiskService
     from .championmastery import ChampionMasteryDiskService
     from .match import MatchDiskService
     from .spectator import SpectatorDiskService
@@ -24,6 +25,7 @@ def _default_services(path: str = None, expirations: Mapping[type, float] = None
         StaticDataDiskService(path, expirations=expirations, plugins=plugins),
         ChampionDiskService(path, expirations=expirations, plugins=plugins),
         SummonerDiskService(path, expirations=expirations, plugins=plugins),
+        AccountDiskService(path, expirations=expirations, plugins=plugins),
         ChampionMasteryDiskService(path, expirations=expirations, plugins=plugins),
         MatchDiskService(path, expirations=expirations, plugins=plugins),
         SpectatorDiskService(path, expirations=expirations, plugins=plugins),
